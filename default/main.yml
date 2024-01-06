@@ -1,0 +1,64 @@
+---
+### NOMAD
+nomad_install: true
+nomad_version: "{{ lookup('env','NOMAD_VERSION') | default('1.6.2', true) }}"
+nomad_architecture_map:
+  # this first entry seems... redundant (but it's required for reasons)
+  amd64: amd64
+  x86_64: amd64
+  armv7l: arm
+  aarch64: arm64
+nomad_architecture: "{{ nomad_architecture_map[ansible_architecture] }}"
+nomad_os: "{{ ansible_system | lower }}"
+nomad_pkg: "nomad_{{ nomad_version }}_{{ nomad_os }}_{{ nomad_architecture }}.zip"
+nomad_zip_url: "https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_{{ nomad_os }}_{{ nomad_architecture }}.zip"
+nomad_checksum_file_url: "https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_SHA256SUMS"
+nomad_privileged_install: false
+nomad_bin_path: "{{ '/usr/bin' if (nomad_install_hashi_repo) else '/usr/local/bin' }}"
+nomad_user: nomad
+nomad_group: nomad
+nomad_groups: null
+nomad_install_hashi_repo: false
+
+
+### CONSUL
+consul_install: true
+consul_version: "{{ lookup('env','CONSUL_VERSION') | default('1.16.2', true) }}"
+consul_architecture_map:
+  # this first entry seems... redundant (but it's required for reasons)
+  amd64: amd64
+  x86_64: amd64
+  armv7l: arm
+  aarch64: arm64
+consul_architecture: "{{ consul_architecture_map[ansible_architecture] }}"
+consul_os: "{{ ansible_system | lower }}"
+consul_pkg: "consul_{{ consul_version }}_{{ consul_os }}_{{ consul_architecture }}.zip"
+consul_zip_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_{{ consul_os }}_{{ consul_architecture }}.zip"
+consul_checksum_file_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_SHA256SUMS"
+consul_privileged_install: false
+consul_bin_path: "{{ '/usr/bin' if (consul_install_hashi_repo) else '/usr/local/bin' }}"
+consul_user: consul
+consul_group: consul
+consul_groups: null
+consul_install_hashi_repo: false
+
+### Vault
+vault_install: false
+vault_version: "{{ lookup('env','VAULT_VERSION') | default('1.12.3', true) }}"
+vault_architecture_map:
+  # this first entry seems... redundant (but it's required for reasons)
+  amd64: amd64
+  x86_64: amd64
+  armv7l: arm
+  aarch64: arm64
+vault_architecture: "{{ vault_architecture_map[ansible_architecture] }}"
+vault_os: "{{ ansible_system | lower }}"
+vault_pkg: "vault_{{ vault_version }}_{{ vault_os }}_{{ vault_architecture }}.zip"
+vault_zip_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_{{ vault_os }}_{{ vault_architecture }}.zip"
+vault_checksum_file_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_SHA256SUMS"
+vault_privileged_install: false
+vault_bin_path: "{{ '/usr/bin' if (vault_install_hashi_repo) else '/usr/local/bin' }}"
+vault_user: vault
+vault_group: vault
+vault_groups: null
+vault_install_hashi_repo: false

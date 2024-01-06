@@ -1,0 +1,71 @@
+---
+- name: Add Vault group
+  become: true
+  group:
+    name: "{{ vault_group }}"
+    state: present
+  # when: vault_manage_group | bool
+
+- name: Add Vault user
+  become: true
+  user:
+    name: "{{ vault_user }}"
+    comment: "Vault user"
+    group: "{{ vault_group }}"
+    groups: "{{ vault_groups }}"
+    system: true
+  # when: vault_manage_user | bool
+
+- name: Check Vault package file (local)
+  stat:
+    path: "{{ role_path }}/files/{{ vault_pkg }}"
+  become: false
+  run_once: true
+  register: vault_package
+  delegate_to: 127.0.0.1
+
+- name: "Download Vault (local) → {{ vault_zip_url }}"
+  get_url:
+    url: "{{ vault_zip_url }}"
+    dest: "{{ role_path }}/files/{{ vault_pkg }}"
+    checksum: "sha256:{{ (lookup('url', vault_checksum_file_url, wantlist=true) | select('match', '.*' + vault_pkg + '$') | first).split()[0] }}"
+    timeout: "42"
+    mode: 0644
+  become: "{{ vault_privileged_install }}"
+  run_once: true
+  tags: installation
+  when: not vault_package.stat.exists | bool
+  delegate_to: 127.0.0.1
+
+- name: Unarchive Vault (local)
+  unarchive:
+    src: "{{ role_path }}/files/{{ vault_pkg }}"
+    dest: "{{ role_path }}/files/"
+    creates: "{{ role_path }}/files/vault"
+  become: "{{ vault_privileged_install }}"
+  run_once: true
+  tags: installation
+  delegate_to: 127.0.0.1
+
+- name: Install Vault
+  become: true
+  copy:
+    src: "{{ role_path }}/files/vault"
+    dest: "{{ vault_bin_path }}"
+    # owner: "{{ vault_user }}"
+    # group: "{{ vault_group }}"
+    # mode: "0755"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  # notify: Restart vault
+
+- name: Cleanup (local)
+  file:
+    path: "{{ item }}"
+    state: "absent"
+  become: "{{ vault_privileged_install }}"
+  with_fileglob: "{{ role_path }}/files/vault"
+  run_once: true
+  tags: installation
+  delegate_to: 127.0.0.1

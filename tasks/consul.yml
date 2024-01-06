@@ -1,0 +1,71 @@
+---
+- name: Add consul group
+  become: true
+  group:
+    name: "{{ consul_group }}"
+    state: present
+  # when: consul_manage_group | bool
+
+- name: Add consul user
+  become: true
+  user:
+    name: "{{ consul_user }}"
+    comment: "consul user"
+    group: "{{ consul_group }}"
+    groups: "{{ consul_groups }}"
+    system: true
+  # when: consul_manage_user | bool
+
+- name: Check consul package file (local)
+  stat:
+    path: "{{ role_path }}/files/{{ consul_pkg }}"
+  become: false
+  run_once: true
+  register: consul_package
+  delegate_to: 127.0.0.1
+
+- name: "Download consul (local) → {{ consul_zip_url }}"
+  get_url:
+    url: "{{ consul_zip_url }}"
+    dest: "{{ role_path }}/files/{{ consul_pkg }}"
+    checksum: "sha256:{{ (lookup('url', consul_checksum_file_url, wantlist=true) | select('match', '.*' + consul_pkg + '$') | first).split()[0] }}"
+    timeout: "42"
+    mode: 0644
+  become: "{{ consul_privileged_install }}"
+  run_once: true
+  tags: installation
+  when: not consul_package.stat.exists | bool
+  delegate_to: 127.0.0.1
+
+- name: Unarchive consul (local)
+  unarchive:
+    src: "{{ role_path }}/files/{{ consul_pkg }}"
+    dest: "{{ role_path }}/files/"
+    creates: "{{ role_path }}/files/consul"
+  become: "{{ consul_privileged_install }}"
+  run_once: true
+  tags: installation
+  delegate_to: 127.0.0.1
+
+- name: Install consul
+  become: true
+  copy:
+    src: "{{ role_path }}/files/consul"
+    dest: "{{ consul_bin_path }}"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0755"
+    # owner: "root"
+    # group: "root"
+    # mode: "0755"
+  notify: restart consul
+
+- name: Cleanup (local)
+  file:
+    path: "{{ item }}"
+    state: "absent"
+  become: "{{ consul_privileged_install }}"
+  with_fileglob: "{{ role_path }}/files/consul"
+  run_once: true
+  tags: installation
+  delegate_to: 127.0.0.1

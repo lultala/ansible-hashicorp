@@ -1,0 +1,70 @@
+---
+- name: Add nomad group
+  become: true
+  group:
+    name: "{{ nomad_group }}"
+    state: present
+  # when: nomad_manage_group | bool
+
+- name: Add nomad user
+  become: true
+  user:
+    name: "{{ nomad_user }}"
+    comment: "nomad user"
+    group: "{{ nomad_group }}"
+    groups: "{{ nomad_groups }}"
+    system: true
+  # when: nomad_manage_user | bool
+
+- name: Check nomad package file (local)
+  stat:
+    path: "{{ role_path }}/files/{{ nomad_pkg }}"
+  become: false
+  run_once: true
+  register: nomad_package
+  delegate_to: 127.0.0.1
+
+- name: "Download nomad (local) → {{ nomad_zip_url }}"
+  get_url:
+    url: "{{ nomad_zip_url }}"
+    dest: "{{ role_path }}/files/{{ nomad_pkg }}"
+    checksum: "sha256:{{ (lookup('url', nomad_checksum_file_url, wantlist=true) | select('match', '.*' + nomad_pkg + '$') | first).split()[0] }}"
+    timeout: "42"
+    mode: 0644
+  become: "{{ nomad_privileged_install }}"
+  run_once: true
+  tags: installation
+  when: not nomad_package.stat.exists | bool
+  delegate_to: 127.0.0.1
+
+- name: Unarchive nomad (local)
+  unarchive:
+    src: "{{ role_path }}/files/{{ nomad_pkg }}"
+    dest: "{{ role_path }}/files/"
+    creates: "{{ role_path }}/files/nomad"
+  become: "{{ nomad_privileged_install }}"
+  run_once: true
+  tags: installation
+  delegate_to: 127.0.0.1
+
+- name: Install nomad
+  become: true
+  copy:
+    src: "{{ role_path }}/files/nomad"
+    dest: "{{ nomad_bin_path }}"
+    owner: "{{ nomad_user }}"
+    group: "{{ nomad_group }}"
+    # owner: "root"
+    # group: "root"
+    mode: "0755"
+  notify: restart nomad
+
+- name: Cleanup (local)
+  file:
+    path: "{{ item }}"
+    state: "absent"
+  become: "{{ nomad_privileged_install }}"
+  with_fileglob: "{{ role_path }}/files/nomad"
+  run_once: true
+  tags: installation
+  delegate_to: 127.0.0.1

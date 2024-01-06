@@ -1,0 +1,12 @@
+---
+- name: restart consul
+  service:
+    name: consul
+    state: restarted
+    enabled: true
+
+- name: restart nomad
+  service:
+    name: nomad
+    state: restarted
+    enabled: true

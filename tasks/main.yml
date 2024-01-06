@@ -1,0 +1,11 @@
+- name: Install Nomad
+  include_tasks: nomad.yml
+  when: nomad_install | bool
+
+- name: Install Consul
+  include_tasks: consul.yml
+  when: consul_install | bool
+
+- name: Install Vault
+  include_tasks: vault.yml
+  when: vault_install | bool
