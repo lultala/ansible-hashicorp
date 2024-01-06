@@ -3,7 +3,6 @@
 nomad_install: true
 nomad_version: "{{ lookup('env','NOMAD_VERSION') | default('1.6.2', true) }}"
 nomad_architecture_map:
-  # this first entry seems... redundant (but it's required for reasons)
   amd64: amd64
   x86_64: amd64
   armv7l: arm
@@ -25,7 +24,6 @@ nomad_install_hashi_repo: false
 consul_install: true
 consul_version: "{{ lookup('env','CONSUL_VERSION') | default('1.16.2', true) }}"
 consul_architecture_map:
-  # this first entry seems... redundant (but it's required for reasons)
   amd64: amd64
   x86_64: amd64
   armv7l: arm
@@ -46,7 +44,6 @@ consul_install_hashi_repo: false
 vault_install: false
 vault_version: "{{ lookup('env','VAULT_VERSION') | default('1.12.3', true) }}"
 vault_architecture_map:
-  # this first entry seems... redundant (but it's required for reasons)
   amd64: amd64
   x86_64: amd64
   armv7l: arm
